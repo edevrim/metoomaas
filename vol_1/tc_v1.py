@@ -21,8 +21,16 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_curve, roc_auc_score, auc, accuracy_score, confusion_matrix
 #%%
 #take datasets
-negatives = pd.read_excel("negatives.xlsx")
+negatives = pd.read_excel("negatives_sample.xlsx")
 safecity = pd.read_excel("safecity.xlsx", sheetname='Full_Data', password='Safecitymap@123')
+
+#to upload github took first x rows
+#negatives_sample = negatives.iloc[0:50000, :]
+#
+#writer = pd.ExcelWriter('negatives_sample.xlsx', engine='xlsxwriter');
+#negatives_sample.to_excel(writer, sheet_name= 'sample');
+#writer.save();
+
 
 #target 1's
 keep_columns = ('INCIDENT TITLE', 'DESCRIPTION', 'CATEGORY',
