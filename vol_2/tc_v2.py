@@ -115,8 +115,8 @@ negatives['len_1'] = negatives.apply(lambda x: len(x['text'].strip()) if len(x['
 #remove less than 30 chars
 negatives2 = negatives[negatives.len_1 >= 30]
 
-#sampled for now (to make it ~ 1/5)
-negatives3 = negatives2[negatives2['source'] == 'imdb_2'].sample(n=36000, random_state=1905)
+#sampled for now (to make it ~ 1/2)
+negatives3 = negatives2[negatives2['source'] == 'imdb_2'].sample(n=8000, random_state=1905)
 negatives4 = negatives2[negatives2['source'] != 'imdb_2']
 
 negatives5 = negatives3.append(negatives4, ignore_index=True)
