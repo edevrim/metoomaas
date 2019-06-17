@@ -226,7 +226,7 @@ def clean_text(texto, min_char, text):
     texto['len1'] = texto.apply(lambda x: len(x.text.strip()) if len(x.text.strip()) > 0 else 0, axis=1) 
 
     #drop if shorter than min_char
-    texto = texto[texto['len1'] >= min_char]
+    #texto = texto[texto['len1'] >= min_char]
     
     texto[text] = texto.text.str.strip()
     #texto[text] = texto.dropna()
@@ -301,92 +301,90 @@ def ner_stanford(data1, lyrics):
 #FINAL FUNCTION    
 #takes incoming text, cleans it and returns outputs 
 
-def finale(data1, text, processed, target, min_char_to_run, cut_off):
+def finale(text, min_char_to_run, cut_off):
     
 #Process text *********************************************************************************************
-    clean_text1 = clean_text(data1, min_char_to_run, text)
+    data1 = pd.DataFrame(index=range(1))
+    data1['text'] = text
+    data1['Target'] = -9
+    
+    clean_text1 = clean_text(data1, min_char_to_run, 'text')
     
     #POS
-    clean_text1 = spacy_data(clean_text1, text) 
+    clean_text1 = spacy_data(clean_text1, 'text') 
 
     #manual check for length (for pos)! 
-    clean_text1['len1'] = clean_text1.apply(lambda x: len(x[processed].strip()) if len(x[processed].strip()) > 0 else 0, axis=1) 
-    clean_text1 = clean_text1[clean_text1['len1'] > min_char_to_run] 
+    clean_text1['len1'] = clean_text1.apply(lambda x: len(x.processed.strip()) if len(x.processed.strip()) > 0 else 0, axis=1) 
+  
+    if clean_text1['len1'].item() > min_char_to_run:
     
     #NER
-    clean_text1 = ner_stanford(clean_text1, text)
+        clean_text1 = ner_stanford(clean_text1, 'text')
+        
+    #Predictions **************************************************************************************************
+        #TFIDFs 
+        test_vectorized_1 = vect_tfidf.transform(clean_text1['processed'])
+        clean_text1['tfidf_1'] = model_tfidf.predict_proba(test_vectorized_1)[:, 1]
+        clean_text1['tfidf_1'] = clean_text1['tfidf_1'].apply(lambda x: 1 if x >= cut_off else 0)
+        
+        test_vectorized_2 = vect_tfidf_verbal.transform(clean_text1['processed'])
+        clean_text1['tfidf_v'] = model_tfidf_verbal.predict_proba(test_vectorized_2)[:, 1]
+        clean_text1['tfidf_v'] = clean_text1['tfidf_v'].apply(lambda x: 1 if x >= cut_off else 0)
+       
+        test_vectorized_3 = vect_tfidf_nonverbal.transform(clean_text1['processed'])
+        clean_text1['tfidf_nv'] = model_tfidf_nonverbal.predict_proba(test_vectorized_3)[:, 1]
+        clean_text1['tfidf_nv'] = clean_text1['tfidf_nv'].apply(lambda x: 1 if x >= cut_off else 0)
+       
+        test_vectorized_4 = vect_tfidf_physical.transform(clean_text1['processed'])
+        clean_text1['tfidf_p'] = model_tfidf_physical.predict_proba(test_vectorized_4)[:, 1]
+        clean_text1['tfidf_p'] = clean_text1['tfidf_p'].apply(lambda x: 1 if x >= cut_off else 0)
+       
+        #Doc2Vec
+        test_doc = pd.DataFrame(pd.concat([clean_text1['processed'], clean_text1['Target']], axis=1))
+        test_doc2 = test_doc.apply(lambda x: TaggedDocument(words=tokenize_text(x['processed']), tags=[x['Target']]), axis=1)
     
-#Predictions **************************************************************************************************
-    #TFIDFs 
-    test_vectorized_1 = vect_tfidf.transform(clean_text1[processed])
-    clean_text1['tfidf_1'] = model_tfidf.predict_proba(test_vectorized_1)[:, 1]
-    clean_text1['tfidf_1'] = clean_text1['tfidf_1'].apply(lambda x: 1 if x >= cut_off else 0)
-    
-    test_vectorized_2 = vect_tfidf_verbal.transform(clean_text1[processed])
-    clean_text1['tfidf_v'] = model_tfidf_verbal.predict_proba(test_vectorized_2)[:, 1]
-    clean_text1['tfidf_v'] = clean_text1['tfidf_v'].apply(lambda x: 1 if x >= cut_off else 0)
-   
-    test_vectorized_3 = vect_tfidf_nonverbal.transform(clean_text1[processed])
-    clean_text1['tfidf_nv'] = model_tfidf_nonverbal.predict_proba(test_vectorized_3)[:, 1]
-    clean_text1['tfidf_nv'] = clean_text1['tfidf_nv'].apply(lambda x: 1 if x >= cut_off else 0)
-   
-    test_vectorized_4 = vect_tfidf_physical.transform(clean_text1[processed])
-    clean_text1['tfidf_p'] = model_tfidf_physical.predict_proba(test_vectorized_4)[:, 1]
-    clean_text1['tfidf_p'] = clean_text1['tfidf_p'].apply(lambda x: 1 if x >= cut_off else 0)
-   
-    #Doc2Vec
-    test_doc = pd.DataFrame(pd.concat([clean_text1[processed], clean_text1[target]], axis=1))
-    test_doc2 = test_doc.apply(lambda x: TaggedDocument(words=tokenize_text(x[processed]), tags=[x[target]]), axis=1)
-
-    y_test_doc_1, X_test_doc_1 = get_vectors(model_dbow, test_doc2)
-    clean_text1['dbow_1'] = model_dbow_log.predict_proba(X_test_doc_1)[:, 1]
-    clean_text1['dbow_1'] = clean_text1['dbow_1'].apply(lambda x: 1 if x >= cut_off else 0)
-   
-    y_test_doc_v, X_test_doc_v = get_vectors(model_dbow_verbal, test_doc2)
-    clean_text1['dbow_v'] = model_dbow_log_verbal.predict_proba(X_test_doc_v)[:, 1]
-    clean_text1['dbow_v'] = clean_text1['dbow_v'].apply(lambda x: 1 if x >= cut_off else 0)
-   
-    y_test_doc_nv, X_test_doc_nv = get_vectors(model_dbow_nonverbal, test_doc2)
-    clean_text1['dbow_nv'] = model_dbow_log_nonverbal.predict_proba(X_test_doc_nv)[:, 1]
-    clean_text1['dbow_nv'] = clean_text1['dbow_nv'].apply(lambda x: 1 if x >= cut_off else 0)
-   
-    y_test_doc_p, X_test_doc_p = get_vectors(model_dbow_physical, test_doc2)
-    clean_text1['dbow_p'] = model_dbow_log_physical.predict_proba(X_test_doc_p)[:, 1]
-    clean_text1['dbow_p'] = clean_text1['dbow_p'].apply(lambda x: 1 if x >= cut_off else 0)
-   
-    #Flags
-    clean_text1['Harassment_flg'] = clean_text1['tfidf_1'] + clean_text1['dbow_1']
-    clean_text1['Verbal_flg'] = clean_text1['tfidf_v'] + clean_text1['dbow_v']
-    clean_text1['NonVerbal_flg'] = clean_text1['tfidf_nv'] + clean_text1['dbow_nv']
-    clean_text1['Physical_flg'] = clean_text1['tfidf_p'] + clean_text1['dbow_p']
-    
-    keep_list = ['text', 'Harassment_flg', 'Verbal_flg','NonVerbal_flg', 'Physical_flg', 'Location', 'Date', 'Time']
-    clean_text1 = clean_text1[keep_list]
-    
+        y_test_doc_1, X_test_doc_1 = get_vectors(model_dbow, test_doc2)
+        clean_text1['dbow_1'] = model_dbow_log.predict_proba(X_test_doc_1)[:, 1]
+        clean_text1['dbow_1'] = clean_text1['dbow_1'].apply(lambda x: 1 if x >= cut_off else 0)
+       
+        y_test_doc_v, X_test_doc_v = get_vectors(model_dbow_verbal, test_doc2)
+        clean_text1['dbow_v'] = model_dbow_log_verbal.predict_proba(X_test_doc_v)[:, 1]
+        clean_text1['dbow_v'] = clean_text1['dbow_v'].apply(lambda x: 1 if x >= cut_off else 0)
+       
+        y_test_doc_nv, X_test_doc_nv = get_vectors(model_dbow_nonverbal, test_doc2)
+        clean_text1['dbow_nv'] = model_dbow_log_nonverbal.predict_proba(X_test_doc_nv)[:, 1]
+        clean_text1['dbow_nv'] = clean_text1['dbow_nv'].apply(lambda x: 1 if x >= cut_off else 0)
+       
+        y_test_doc_p, X_test_doc_p = get_vectors(model_dbow_physical, test_doc2)
+        clean_text1['dbow_p'] = model_dbow_log_physical.predict_proba(X_test_doc_p)[:, 1]
+        clean_text1['dbow_p'] = clean_text1['dbow_p'].apply(lambda x: 1 if x >= cut_off else 0)
+       
+        #Flags
+        clean_text1['Harassment_flg'] = clean_text1['tfidf_1'] + clean_text1['dbow_1']
+        clean_text1['Verbal_flg'] = clean_text1['tfidf_v'] + clean_text1['dbow_v']
+        clean_text1['NonVerbal_flg'] = clean_text1['tfidf_nv'] + clean_text1['dbow_nv']
+        clean_text1['Physical_flg'] = clean_text1['tfidf_p'] + clean_text1['dbow_p']
+        
+        keep_list = ['text', 'Harassment_flg', 'Verbal_flg','NonVerbal_flg', 'Physical_flg', 'Location', 'Date', 'Time']
+        clean_text1 = clean_text1[keep_list]
+        
+    else: 
+        clean_text1 = pd.DataFrame(clean_text1['text'])
+        clean_text1['Harassment_flg'] = -9 
+        clean_text1['Verbal_flg'] = -9 
+        clean_text1['NonVerbal_flg'] = -9 
+        clean_text1['Physical_flg'] = -9 
+        clean_text1['Location'] = ''
+        clean_text1['Date'] = ''
+        clean_text1['Time'] = ''
+        
     return clean_text1
 
-#%%
-#Some test data 
-data_test = pd.DataFrame(index=range(10))
-data_test['text'] = 'I was walking in Boullion street, an old guy groped me and masturbated! :('
-data_test['text'].iloc[1] = 'I ate a pasta at this Chinese restaurant in Ocean Drive and I liked it so much it was fucking awesome mate'
-data_test['text'].iloc[2] = 'Yesterday, some people stalked a young girl in New York street.'
-data_test['text'].iloc[3] = "I kissed a girl and I liked it on Monday. The taste of her cherry chap stick. I hope my boyfriend don't mind it"
-data_test['text'].iloc[4] = "Hello"
-data_test['text'].iloc[5] = "I have a terrible headache please help me it fucks my brain at 22:45!"
-data_test['text'].iloc[6] = "Dun aksam, eve giderken orospu cocugunun teki gotumu elledi"
-data_test['text'].iloc[7] = "A son of a bitch called me bitch at 1 am near the Vrijtof"
-data_test['text'].iloc[8] = "Last night, when I was eating pasta in the restaurant, a guy called me bitch"
-data_test['text'].iloc[9] = "asddad sadads sadaadsa sdssxxx ddwqeq xxdas"
-#need to add this .s
-data_test['Target'] = -9
-
 #%%    
-clean_text1 = finale(data_test, 'text', 'processed', 'Target', 10, 0.7);
 
+#text = 'Hello'
 
-
-
+#clean_1 = finale(text, 10, 0.7)
 
 
  
