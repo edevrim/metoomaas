@@ -10,20 +10,16 @@ import re
 import pandas as pd
 import matplotlib.pyplot as plt
 import spacy
-tqdm.pandas(desc="progress-bar")
-from nltk.tag import StanfordNERTagger
-from sklearn.feature_extraction.text import CountVectorizer
 from collections import Counter
 from wordcloud import WordCloud
 
 #%%
 
 data_class = pd.read_excel('data_class.xlsx')
-data_ner = pd.read_excel('data_ner.xlsx')
+#data_ner = pd.read_excel('data_ner.xlsx')
 
 #data_c1111 = data_class.head(10)
-
-data_ner2 = data_ner[data_ner['Target'] == 1]
+#data_ner2 = data_ner[data_ner['Target'] == 1]
 
 #%%
 #find verbs, adverbs, nouns...
@@ -31,10 +27,10 @@ data_ner2 = data_ner[data_ner['Target'] == 1]
 def spacy_data(data1, lyrics):
 
     #init 
-    verbs = []
-    nouns = []
-    adverbs = []
-    adj = []
+    #verbs = []
+    #nouns = []
+    #adverbs = []
+    #adj = []
     corpus = []
     processed = []
     
@@ -63,20 +59,21 @@ def spacy_data(data1, lyrics):
             #check this code 
         
         list1313 = ('VERB', 'ADJ', 'NOUN', 'ADV')
-        adj.append(" ".join(spacy_data["lemma"][spacy_data["pos"] == "ADJ"].values))
-        verbs.append(" ".join(spacy_data["lemma"][spacy_data["pos"] == "VERB"].values))
-        nouns.append(" ".join(spacy_data["lemma"][spacy_data["pos"] == "NOUN"].values))
-        adverbs.append(" ".join(spacy_data["lemma"][spacy_data["pos"] == "ADV"].values))
+        #adj.append(" ".join(spacy_data["lemma"][spacy_data["pos"] == "ADJ"].values))
+        #verbs.append(" ".join(spacy_data["lemma"][spacy_data["pos"] == "VERB"].values))
+        #nouns.append(" ".join(spacy_data["lemma"][spacy_data["pos"] == "NOUN"].values))
+        #adverbs.append(" ".join(spacy_data["lemma"][spacy_data["pos"] == "ADV"].values))
         processed.append(" ".join(spacy_data["lemma"][spacy_data["pos"].isin(list1313)].values))
         
-        corpus_clean = " ".join(spacy_data["lemma"][spacy_data["stop_word"] == False].values)
+        #corpus_clean = " ".join(spacy_data["lemma"][spacy_data["stop_word"] == False].values)
+        corpus_clean = " ".join(spacy_data["lemma"].values)
         corpus_clean = re.sub(r'[^A-Za-z0-9]+', ' ', corpus_clean)   
         corpus.append(corpus_clean)
         
-    data1['Verbs'] = verbs
-    data1['Nouns'] = nouns
-    data1['Adverbs'] = adverbs
-    data1['Adjectives'] = adj
+    #data1['Verbs'] = verbs
+    #data1['Nouns'] = nouns
+    #data1['Adverbs'] = adverbs
+    #data1['Adjectives'] = adj
     data1['Corpus'] = corpus
     data1['processed'] = processed
     
@@ -85,110 +82,110 @@ def spacy_data(data1, lyrics):
 #%%
 #NER by Stanford   
 
-#most frequent bigrams
-c_vec = CountVectorizer(ngram_range=(2,2), min_df=3)
-
-# input to fit_transform() should be an iterable with strings
-lyrix = data_ner['text'].astype(str)
-ngrams = c_vec.fit_transform(lyrix)
-
-# needs to happen after fit_transform()
-vocab = c_vec.vocabulary_
-
-count_values = ngrams.toarray().sum(axis=0)
-
-xd1 = pd.DataFrame(vocab, index=[0])
-xd1 = xd1.T.reset_index(drop=False) 
-
-# new data frame with split value columns 
-new = xd1['index'].str.split(" ", n = 1, expand = True) 
-  
-# making separate first name column from new data frame 
-list_consecutive = pd.DataFrame(xd1['index'])
-list_consecutive['First_word']= new[0] 
-  
-# making separate last name column from new data frame 
-list_consecutive['Last_word']= new[1] 
-
-list_consecutive2 = list_consecutive['index'].tolist()
+##most frequent bigrams
+#c_vec = CountVectorizer(ngram_range=(2,2), min_df=3)
+#
+## input to fit_transform() should be an iterable with strings
+#lyrix = data_ner['text'].astype(str)
+#ngrams = c_vec.fit_transform(lyrix)
+#
+## needs to happen after fit_transform()
+#vocab = c_vec.vocabulary_
+#
+#count_values = ngrams.toarray().sum(axis=0)
+#
+#xd1 = pd.DataFrame(vocab, index=[0])
+#xd1 = xd1.T.reset_index(drop=False) 
+#
+## new data frame with split value columns 
+#new = xd1['index'].str.split(" ", n = 1, expand = True) 
+#  
+## making separate first name column from new data frame 
+#list_consecutive = pd.DataFrame(xd1['index'])
+#list_consecutive['First_word']= new[0] 
+#  
+## making separate last name column from new data frame 
+#list_consecutive['Last_word']= new[1] 
+#
+#list_consecutive2 = list_consecutive['index'].tolist()
 #%%    
 
-del count_values, lyrix, new, vocab, xd1, list_consecutive
+#del count_values, lyrix, new, vocab, xd1, list_consecutive
 
 #%%
-
-def ner_stanford(data1, lyrics, list_consecutive2): 
-    #print('NTLK Version: %s' % nltk.__version__)
-    stanford_ner_tagger = StanfordNERTagger(
-    'stanford_ner/' + 'classifiers/english.muc.7class.distsim.crf.ser.gz',
-    'stanford_ner/' + 'stanford-ner-3.9.2.jar')
-      
-    data1['LOC'] = ''; 
-    data1['DATE'] = '';
-    data1['PERSON'] = '';
-    data1['ORGANIZATION'] = '';
-     
-    for i in range(0, len(data1)):
-        
-        loc = '';
-        date = '';
-        org = '';
-        person = '';
-        prev_tag_type = 'HELLO'
-        prev_tag_value = 'HELLO'
-        
-        song = data1.iloc[i][lyrics]
-        results = stanford_ner_tagger.tag(song.split())
-        
-        for result in results:
-           
-            tag_value = result[0]
-            tag_type = result[1]
-            
-            compare1 = prev_tag_value + ' ' + tag_value
-            compare1 = compare1.lower()
-            
-            if tag_type == 'PERSON': 
-                if prev_tag_type == 'PERSON':
-                    if compare1 in list_consecutive2:
-                        person = person + '-' + tag_value
-                else:
-                    person = person + ' ' + tag_value
-                    
-            elif tag_type == 'LOCATION':
-                if prev_tag_type == 'LOCATION':
-                    if compare1 in list_consecutive2:
-                        loc =  loc+ '-' +tag_value
-                else:
-                    loc =  loc+' '+tag_value
-                    
-            elif tag_type == 'ORGANIZATION':
-                if prev_tag_type == 'ORGANIZATION':
-                    if compare1 in list_consecutive2:
-                        org = org+ '-' +tag_value
-                else:
-                    org = org+ ' ' +tag_value
-                    
-            #No need for date        
-            elif tag_type == 'DATE': 
-              date = date+ ' '+tag_value
-              
-            prev_tag_type = tag_type  
-            prev_tag_value = tag_value 
-              
-              
-        data1['LOC'].iloc[i] = loc;
-        data1['DATE'].iloc[i] = date;
-        data1['PERSON'].iloc[i] = person;
-        data1['ORGANIZATION'].iloc[i] = org;
-        
-        return data1
+#
+#def ner_stanford(data1, lyrics, list_consecutive2): 
+#    #print('NTLK Version: %s' % nltk.__version__)
+#    stanford_ner_tagger = StanfordNERTagger(
+#    'stanford_ner/' + 'classifiers/english.muc.7class.distsim.crf.ser.gz',
+#    'stanford_ner/' + 'stanford-ner-3.9.2.jar')
+#      
+#    data1['LOC'] = ''; 
+#    data1['DATE'] = '';
+#    data1['PERSON'] = '';
+#    data1['ORGANIZATION'] = '';
+#     
+#    for i in range(0, len(data1)):
+#        
+#        loc = '';
+#        date = '';
+#        org = '';
+#        person = '';
+#        prev_tag_type = 'HELLO'
+#        prev_tag_value = 'HELLO'
+#        
+#        song = data1.iloc[i][lyrics]
+#        results = stanford_ner_tagger.tag(song.split())
+#        
+#        for result in results:
+#           
+#            tag_value = result[0]
+#            tag_type = result[1]
+#            
+#            compare1 = prev_tag_value + ' ' + tag_value
+#            compare1 = compare1.lower()
+#            
+#            if tag_type == 'PERSON': 
+#                if prev_tag_type == 'PERSON':
+#                    if compare1 in list_consecutive2:
+#                        person = person + '-' + tag_value
+#                else:
+#                    person = person + ' ' + tag_value
+#                    
+#            elif tag_type == 'LOCATION':
+#                if prev_tag_type == 'LOCATION':
+#                    if compare1 in list_consecutive2:
+#                        loc =  loc+ '-' +tag_value
+#                else:
+#                    loc =  loc+' '+tag_value
+#                    
+#            elif tag_type == 'ORGANIZATION':
+#                if prev_tag_type == 'ORGANIZATION':
+#                    if compare1 in list_consecutive2:
+#                        org = org+ '-' +tag_value
+#                else:
+#                    org = org+ ' ' +tag_value
+#                    
+#            #No need for date        
+#            elif tag_type == 'DATE': 
+#              date = date+ ' '+tag_value
+#              
+#            prev_tag_type = tag_type  
+#            prev_tag_value = tag_value 
+#              
+#              
+#        data1['LOC'].iloc[i] = loc;
+#        data1['DATE'].iloc[i] = date;
+#        data1['PERSON'].iloc[i] = person;
+#        data1['ORGANIZATION'].iloc[i] = org;
+#        
+#        return data1
    
     
 #%%
 #NER for harassments
-data_ner3 = ner_stanford(data_ner2, 'text', list_consecutive2)        
-        
+#data_ner3 = ner_stanford(data_ner2, 'text', list_consecutive2)        
+#        
 #%%
 #All together 
         
@@ -197,7 +194,8 @@ def create_my_data(data_lower, lyrics):
     
     data1 = spacy_data(data_lower, lyrics); 
 
-    keep1 = [lyrics, 'Target','VERBAL ABUSE', 'NON-VERBAL ABUSE','PHYSICAL ABUSE', 'SERIOUS PHYSICAL ABUSE', 'OTHER ABUSE', 'Verbs','Nouns','Adverbs','Adjectives','processed']
+    #keep1 = [lyrics, 'Target','VERBAL ABUSE', 'NON-VERBAL ABUSE','PHYSICAL ABUSE', 'SERIOUS PHYSICAL ABUSE', 'OTHER ABUSE', 'Verbs','Nouns','Adverbs','Adjectives','processed']
+    keep1 = [lyrics, 'Target','VERBAL ABUSE', 'NON-VERBAL ABUSE','PHYSICAL ABUSE', 'SERIOUS PHYSICAL ABUSE', 'OTHER ABUSE','processed', 'Corpus']
     data3 = data1[keep1]
     
     #to excel

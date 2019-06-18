@@ -24,7 +24,8 @@ from gensim.test.test_doc2vec import ConcatenatedDoc2Vec
 #take dataset
 data_all = pd.read_excel('MM_last.xlsx')
 data_all['text'] = data_all['text'].astype(str)
-data_all['processed'] = data_all['processed'].astype(str)
+#data_all['processed'] = data_all['processed'].astype(str)
+data_all['Corpus'] = data_all['Corpus'].astype(str)
 
 va = pd.crosstab(index = data_all['VERBAL ABUSE'], columns="Total count")
 nva = pd.crosstab(index = data_all['NON-VERBAL ABUSE'], columns="Total count")
@@ -247,15 +248,21 @@ def all_techniques(data1, target, text, test_percent, min_df, max_df, ngram_rang
 
 #%%
 
-#plain text
-output_h_vs_not = all_techniques(data_all, 'Target', 'text', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
-output_verbal_vs_not = all_techniques(data_all, 'VERBAL ABUSE', 'text', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
-output_nverbal_vs_not = all_techniques(data_all, 'NON-VERBAL ABUSE', 'text', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
-output_pys_vs_not = all_techniques(data_all, 'PHYSICAL ABUSE', 'text', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
+#corpus text
+output_h_vs_not = all_techniques(data_all, 'Target', 'Corpus', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
+output_verbal_vs_not = all_techniques(data_all, 'VERBAL ABUSE', 'Corpus', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
+output_nverbal_vs_not = all_techniques(data_all, 'NON-VERBAL ABUSE', 'Corpus', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
+output_pys_vs_not = all_techniques(data_all, 'PHYSICAL ABUSE', 'Corpus', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
 
-#processed
-p_output_h_vs_not = all_techniques(data_all, 'Target', 'processed', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
-p_output_verbal_vs_not = all_techniques(data_all, 'VERBAL ABUSE', 'processed', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
-p_output_nverbal_vs_not = all_techniques(data_all, 'NON-VERBAL ABUSE', 'processed', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
-p_output_pys_vs_not = all_techniques(data_all, 'PHYSICAL ABUSE', 'processed', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
+##plain text
+#output_h_vs_not = all_techniques(data_all, 'Target', 'text', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
+#output_verbal_vs_not = all_techniques(data_all, 'VERBAL ABUSE', 'text', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
+#output_nverbal_vs_not = all_techniques(data_all, 'NON-VERBAL ABUSE', 'text', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
+#output_pys_vs_not = all_techniques(data_all, 'PHYSICAL ABUSE', 'text', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
+#
+##processed
+#p_output_h_vs_not = all_techniques(data_all, 'Target', 'processed', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
+#p_output_verbal_vs_not = all_techniques(data_all, 'VERBAL ABUSE', 'processed', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
+#p_output_nverbal_vs_not = all_techniques(data_all, 'NON-VERBAL ABUSE', 'processed', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
+#p_output_pys_vs_not = all_techniques(data_all, 'PHYSICAL ABUSE', 'processed', 0.3, 3, 0.95, 1, 3, 300, 10, 5, 5) 
 

@@ -15,6 +15,10 @@ Created on Sat Apr 13 21:03:40 2019
 #https://github.com/rmaestre/Sentiwordnet-BC/blob/master/test/testdata.manual.2009.06.14.csv
 
 import pandas as pd
+import re
+from replacers import AntonymReplacer
+from spellchecker import SpellChecker
+import string
 
 #%%
 #take datasets
@@ -32,19 +36,119 @@ safecity_new = pd.read_excel("safecity.xlsx", sheetname='Full_Data', password='S
 
 #%%
 #Preprocessing 
+def decontracted(phrase):
+    # specific
+    #phrase = phrase.lower() # lowercase text
+    phrase = re.sub(r",", "", phrase)
+    phrase = re.sub(r'i\'mma', 'i am going to', phrase)
+    phrase = re.sub(r'i\'ma', 'i am going to', phrase)
+    phrase = re.sub(r"won\'t", "will not", phrase)
+    phrase = re.sub(r"can\'t", "can not", phrase)
+    phrase = re.sub(r"ain\'t", "are not", phrase)
+    phrase = re.sub(r"gonna", "going to", phrase)
+    phrase = re.sub(r"wanna", "want to", phrase)
+    phrase = re.sub(r"dont", "do not", phrase)
+    phrase = re.sub(r"dont", "do not", phrase)
+    phrase = re.sub(r'dammit', 'damn it', phrase)
+    phrase = re.sub(r'imma', 'i am going to', phrase)
+    phrase = re.sub(r'gimme', 'give me', phrase)
+    phrase = re.sub(r'luv', 'love', phrase)
+    phrase = re.sub(r' dem ', 'them', phrase)
+    phrase = re.sub(r' asap ', 'as soon as possible', phrase)
+    phrase = re.sub(r' gyal ', 'girl', phrase)
+    phrase = re.sub(r' dat ', ' that ', phrase)
+    phrase = re.sub(r' skrrt ', ' ', phrase)
+    phrase = re.sub(r' yea ', ' yeah ', phrase)
+    phrase = re.sub(r' ayy ', '', phrase)
+    phrase = re.sub(r' aye ', '', phrase)
+    phrase = re.sub(r' ohoh ', '', phrase)
+    phrase = re.sub(r' hol ', 'hold', phrase)
+    phrase = re.sub(r' lil ', ' little ', phrase)
+    phrase = re.sub(r' g ', ' gangster ', phrase)
+    phrase = re.sub(r' gangsta ', ' gangster ', phrase)
+    phrase = re.sub(r'thang', 'thing', phrase)
+    phrase = re.sub(r'gotta', 'going to', phrase)
+    phrase = re.sub(r' hook ', ' ', phrase)
+    phrase = re.sub(r' intro ', ' ', phrase)
+    phrase = re.sub(r' gon ', ' going to ', phrase)
+    phrase = re.sub(r' shoulda ', ' should have ', phrase)
+    phrase = re.sub(r' em ', ' them ', phrase)
+    phrase = re.sub(r' ya ', ' you ', phrase)
+    phrase = re.sub(r' da ', ' the ', phrase)
+    phrase = re.sub(r' na na ', ' ', phrase)
+    phrase = re.sub(r' hoe', ' whore', phrase)
+    phrase = re.sub(r' oh ', ' ', phrase)
+    phrase = re.sub(r'\b(\w+)( \1\b)+', r'\1', phrase)
+    phrase = re.sub(r'\'til', 'till', phrase)
+    phrase = re.sub(r'ooh', '', phrase)
+    phrase = re.sub(r'lala', '', phrase)
+    phrase = re.sub(r' ho ', ' whore ', phrase)
+    phrase = re.sub(r' mm ', '  ', phrase)
+    phrase = re.sub(r' yah ', '  ', phrase)
+    phrase = re.sub(r' yeah ', '  ', phrase)
+    phrase = re.sub(r'hitta', 'nigga', phrase)   
+    #phrase = re.sub(r'u', 'you', phrase)   
+    phrase = re.sub(r'\&', 'and', phrase)
+    phrase = re.sub(r'nothin', 'nothing', phrase)
+    phrase = re.sub(r'\$', 's', phrase)
+    phrase = re.sub(r" c\'mon", "come on", phrase)
+    phrase = re.sub(r" \'cause", " because", phrase)
+    phrase = re.sub(r" cuz ", " because ", phrase)
+    phrase = re.sub(r" \'cuz ", " because ", phrase)
+    # general
+    phrase = re.sub(r"n\'t", " not", phrase)
+    phrase = re.sub(r"\'re", " are", phrase)
+    phrase = re.sub(r"\'s", " is", phrase)
+    phrase = re.sub(r"\'d", " would", phrase)
+    phrase = re.sub(r"\'ll", " will", phrase)
+    phrase = re.sub(r"\'t", " not", phrase)
+    phrase = re.sub(r"\'ve", " have", phrase)
+    phrase = re.sub(r"\'m", " am", phrase)
+    phrase = re.sub(r"\'yo", "your", phrase)
 
+    return phrase
+
+#%%    
+def spelling11(data1, text1): 
+    
+    spell = SpellChecker()
+    spell.word_frequency.load_text_file('corporaForSpellCorrection.txt')
+    sent = data1[text1].str.split()
+
+    for k in range(len(sent)):     
+        misspelled = spell.unknown(sent.iloc[k])
+        xd1 = ''
+        for word in sent.iloc[k]:
+            if word in misspelled:
+                # Get the one `most likely` answer
+                word = spell.correction(word)
+                xd1 = xd1+' '+word 
+            else:
+                xd1 = xd1+' '+word 
+                
+        data1[text1].iloc[k] = xd1 
+        
+    return data1
+
+#%%
 def clean_text(texto, min_char, text):
     
-    texto[text] = texto.text.dropna()
+    texto[text] = texto[text].dropna()
     texto[text] = texto[text].astype(str)
     texto[text] = texto[text].replace({'\n': ' '}, regex=True)
-    texto[text] = texto[text].replace(r'[\W_]+', ' ', regex=True) 
+    #texto[text] = texto[text].replace(r'[\W_]+', ' ', regex=True) 
+    
+    remove = string.punctuation
+    remove = remove.replace(":", "")
+    remove = remove.replace("'", "")
+    
+    texto[text] = texto[text].str.translate({ord(char): None for char in remove})
     
     #Let's make lowercase in the end
     #texto = texto.text.str.lower() # lowercase text
     
     #remove weird chars
-    texto[text] = texto.text.apply(lambda x: ''.join([" " if ord(i) < 32 or ord(i) > 126 else i for i in x]))
+    texto[text] = texto[text].apply(lambda x: ''.join([" " if ord(i) < 32 or ord(i) > 126 else i for i in x]))
     
     #texto = pd.DataFrame(texto)
     #keep longer one if description is shorter than 30 chars
@@ -53,7 +157,7 @@ def clean_text(texto, min_char, text):
     #drop if shorter than min_char
     texto = texto[texto['len1'] >= min_char]
     
-    texto[text] = texto.text.str.strip()
+    texto[text] = texto[text].str.strip()
     #texto[text] = texto.dropna()
     
     #remove weird duplicates
@@ -61,6 +165,33 @@ def clean_text(texto, min_char, text):
     texto = texto.reset_index(drop=True)
 
     return texto
+
+#%%
+def negations(text):
+    replacer = AntonymReplacer()
+    
+    sent = text.split()
+    noneg = replacer.replace_negations(sent)
+    separator = ' '
+    out = separator.join(noneg)
+    
+    return out
+
+#%%
+#Test 
+#text11 = pd.DataFrame(index=range(6),columns=range(1))
+#text11['text'] = ''
+#text11['text'].iloc[0] = "Im gonna go to cuz hell fuckin yeah!"  
+#text11['text'].iloc[1] = "I am not unhappi today?" 
+#text11['text'].iloc[2] = "You weere not respectful today" 
+#text11['text'].iloc[5] = "I was not satisfied today" 
+#text11['text'].iloc[3] = "I wasn't  dissatisfied today" 
+#text11['text'].iloc[4] = "Hello          world, I am fuckin harrassed" 
+#
+#text11['text2'] = text11['text'].apply(decontracted) 
+#text11 = clean_text(text11, 10, 'text2')
+#text11 = spelling11(text11, 'text2') 
+#text11['text2'] = text11['text2'].apply(negations) 
 
 #%%
 #new safecity data
@@ -89,11 +220,13 @@ safecity2['text'] = safecity2.apply(lambda x: x['DESCRIPTION'].strip() if (x.len
 #safecity4 = pd.DataFrame(safecity4).rename(index=str, columns={0: "text"})
 
 #Preprocessing 
-safecity5 = clean_text(safecity2, 30, 'text')
+safecity2['text'] = safecity2['text'].apply(decontracted) 
+safecity5 = clean_text(safecity2, 20, 'text')
+#safecity5 = spelling11(safecity5, 'text') 
+safecity5['text'] = safecity5['text'].apply(negations) 
 
 #safecity5 = pd.DataFrame(safecity5)
-safecity5 = safecity5.rename(columns={0: "text"})
-
+#safecity5 = safecity5.rename(columns={0: "text"})
 safecity5 = safecity5[['text', 'VERBAL ABUSE', 'NON-VERBAL ABUSE','PHYSICAL ABUSE', 'SERIOUS PHYSICAL ABUSE', 'OTHER ABUSE']]
 
 #%%
@@ -118,8 +251,13 @@ negatives5 = negatives5['text'].drop_duplicates()
 negatives5 = pd.DataFrame(negatives5)
 
 #Preprocessing 
-negatives6 = clean_text(negatives5, 30, 'text')
-negatives6 = pd.DataFrame(negatives6)
+negatives5['text'] = negatives5['text'].apply(decontracted) 
+negatives6 = clean_text(negatives5, 20, 'text')
+#negatives6 = spelling11(negatives6, 'text') 
+negatives6['text'] = negatives6['text'].apply(negations) 
+
+
+#negatives6 = pd.DataFrame(negatives6)
 
 negatives6['VERBAL ABUSE'] = 0
 negatives6['NON-VERBAL ABUSE'] = 0
