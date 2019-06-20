@@ -19,6 +19,7 @@ import string
 import re 
 from replacers import AntonymReplacer
 from spellchecker import SpellChecker
+
 #%%
 
 ##Training data (all safecity and other reviews) 
@@ -72,6 +73,7 @@ def tfidf(train_data, text, target, min_df, max_df, ngram_range1, ngram_range2):
     
     return model_tfidf, vect_tfidf
 
+#%%
 #Functions for Doc2Vec 
 def tokenize_text(text):
     tokens = []
@@ -82,12 +84,13 @@ def tokenize_text(text):
             tokens.append(word)
     return tokens  
 
+#%%
 def get_vectors(model, tagged_docs):
     sents = tagged_docs.values
     targets, regressors = zip(*[(doc.tags[0], model.infer_vector(doc.words, steps=20)) for doc in sents])
     return targets, regressors
 
-
+#%%
 def dbow(train_data, text, target, vector_size1, window1, negative1, min_count1):
     
     #DBOW is the Doc2Vec model analogous to Skip-gram model in Word2Vec. 
@@ -206,6 +209,10 @@ nlp = spacy.load('en_core_web_md')
 #For NER
 stanford_ner_tagger = StanfordNERTagger('stanford_ner/' + 'classifiers/english.muc.7class.distsim.crf.ser.gz','stanford_ner/' + 'stanford-ner-3.9.2.jar')
 
+#For Spelling 
+spell = SpellChecker()
+spell.word_frequency.load_text_file('corporaForSpellCorrection.txt')
+
 #%%
 #Preprocessing 
 def decontracted(phrase):
@@ -277,14 +284,19 @@ def decontracted(phrase):
     phrase = re.sub(r"\'ve", " have", phrase)
     phrase = re.sub(r"\'m", " am", phrase)
     phrase = re.sub(r"\'yo", "your", phrase)
-
+    
+    #harrasment
+    phrase = re.sub("not harassed", "good movie", phrase)
+    phrase = re.sub("didn't harassed", "good movie", phrase)
+    phrase = re.sub("haven't harassed", "good movie", phrase)
+    
     return phrase
 
 #%%    
 def spelling11(data1, text1): 
     
-    spell = SpellChecker()
-    spell.word_frequency.load_text_file('corporaForSpellCorrection.txt')
+#    spell = SpellChecker()
+#    spell.word_frequency.load_text_file('corporaForSpellCorrection.txt')
     sent = data1[text1].str.split()
 
     for k in range(len(sent)):     
@@ -484,7 +496,7 @@ def finale(text, min_char_to_run, cut_off):
         count1 = clean_text1['Verbal_flg'] + clean_text1['NonVerbal_flg'] + clean_text1['Physical_flg']
         
         #Suspicous harassments
-        if count1.item() < 2:
+        if count1.item() < 2 or clean_text1['Harassment_flg'].item() < 2:
             clean_text1['Harassment_flg'] = -9
             
         clean_text1['text'] = text
@@ -503,6 +515,3 @@ def finale(text, min_char_to_run, cut_off):
         clean_text1['Time'] = ''
         
     return clean_text1
-
-
- 

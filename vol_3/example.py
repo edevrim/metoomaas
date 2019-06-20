@@ -29,7 +29,7 @@ text_10 = "asddad sadads sadaadsa sdssxxx ddwqeq xxdas"
 text_11 = 'I was not harassed'
 text_12 = "I'm gonna take the bus at 12:13. I saw a guy yesterday and he looked like very disssatisfied and he weere groping me"
 text_13 = "We weere watching a movie where old people masturbated"
-text_14 = "Last night, I was not harassed at the bus"
+text_14 = "Last night, I was not harassed"
 text_15 = "Last night, we discussed about harassment issues in Maastricht"
 
 #%%
@@ -48,10 +48,9 @@ out_9 = mm.finale(text_9, 10, 0.6) #NOK
 out_10 = mm.finale(text_10, 10, 0.6) #ok
 out_11 = mm.finale(text_11, 10, 0.6) #ok
 out_12 = mm.finale(text_12, 10, 0.6) #ok
-out_13 = mm.finale(text_13, 10, 0.6) #NOK
-out_14 = mm.finale(text_14, 10, 0.6) #NOK
+out_13 = mm.finale(text_13, 10, 0.6) #ok
+out_14 = mm.finale(text_14, 10, 0.6) #OK
 out_15 = mm.finale(text_15, 10, 0.6) #ok
-
 
 
 
