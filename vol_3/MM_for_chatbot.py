@@ -19,6 +19,8 @@ import string
 import re 
 from replacers import AntonymReplacer
 from spellchecker import SpellChecker
+import warnings
+warnings.filterwarnings("ignore")
 
 #%%
 
