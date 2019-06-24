@@ -288,9 +288,69 @@ def decontracted(phrase):
     phrase = re.sub(r"\'yo", "your", phrase)
     
     #harrasment
-    phrase = re.sub("not harassed", "good movie", phrase)
-    phrase = re.sub("didn't harassed", "good movie", phrase)
-    phrase = re.sub("haven't harassed", "good movie", phrase)
+    phrase = re.sub("not been harassed", "apple", phrase)
+    phrase = re.sub("not harassed", "apple", phrase)
+    phrase = re.sub("not harass", "apple", phrase)
+    
+    phrase = re.sub("not been raped", "apple", phrase)
+    phrase = re.sub("not raped", "apple", phrase)
+    phrase = re.sub("not rape", "apple", phrase)
+    
+    phrase = re.sub("not been stared", "apple", phrase)
+    phrase = re.sub("not stared", "apple", phrase)
+    phrase = re.sub("not stare", "apple", phrase)
+    
+    phrase = re.sub("not been oggled", "apple", phrase)
+    phrase = re.sub("not oggled", "apple", phrase)
+    phrase = re.sub("not oggle", "apple", phrase)
+    
+    phrase = re.sub("not been touched", "apple", phrase)
+    phrase = re.sub("not touched", "apple", phrase)
+    phrase = re.sub("not touch", "good apple", phrase)
+    
+    phrase = re.sub("not been groped", "apple", phrase)
+    phrase = re.sub("not groped", "apple", phrase)
+    phrase = re.sub("not grope", "apple", phrase)
+    
+    phrase = re.sub("not been catcalled", "apple", phrase)
+    phrase = re.sub("not catcalled", "apple", phrase)
+    phrase = re.sub("not catcall", "apple", phrase)
+    
+    phrase = re.sub("not been whispered", "apple", phrase)
+    phrase = re.sub("not whispered", "apple", phrase)
+    phrase = re.sub("not whisper", "apple", phrase)
+    
+    phrase = re.sub("not been whistled", "apple", phrase)
+    phrase = re.sub("not whistled", "apple", phrase)
+    phrase = re.sub("not whistle", "apple", phrase)
+    
+    phrase = re.sub("not been teased", "apple", phrase)
+    phrase = re.sub("not teased", "apple", phrase)
+    phrase = re.sub("not tease", "apple", phrase)
+    
+    phrase = re.sub("not been teased", "apple", phrase)
+    phrase = re.sub("not teased", "apple", phrase)
+    phrase = re.sub("not tease", "apple", phrase)
+    
+    phrase = re.sub("not been stalked", "apple", phrase)
+    phrase = re.sub("not stalked", "apple", phrase)
+    phrase = re.sub("not stalk", "apple", phrase)
+    
+    phrase = re.sub("not been called", "apple", phrase)
+    phrase = re.sub("not called", "apple", phrase)
+    phrase = re.sub("not call", "apple", phrase)
+  
+    phrase = re.sub("not been followed", "apple", phrase)
+    phrase = re.sub("not followed", "apple", phrase)
+    phrase = re.sub("not follow", "apple", phrase)
+    
+    phrase = re.sub("not been shouted", "apple", phrase)
+    phrase = re.sub("not shouted", "apple", phrase)
+    phrase = re.sub("not shout", "apple", phrase)
+    
+    phrase = re.sub("not been attacked", "apple", phrase)
+    phrase = re.sub("not attacked", "apple", phrase)
+    phrase = re.sub("not attack", "apple", phrase)
     
     return phrase
 
