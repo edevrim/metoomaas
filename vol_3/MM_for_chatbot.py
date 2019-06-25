@@ -14,13 +14,14 @@ import multiprocessing
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 import spacy
 import pickle
-from nltk.tag import StanfordNERTagger
+#from nltk.tag import StanfordNERTagger
 import string
 import re 
 from replacers import AntonymReplacer
 from spellchecker import SpellChecker
 import warnings
 warnings.filterwarnings("ignore")
+import bert_for_chatbot as bert
 
 #%%
 
@@ -209,7 +210,7 @@ model_dbow_log_physical = pickle.load(open('model_dbow_log_physical.sav', 'rb'))
 nlp = spacy.load('en_core_web_md')
 
 #For NER
-stanford_ner_tagger = StanfordNERTagger('stanford_ner/' + 'classifiers/english.muc.7class.distsim.crf.ser.gz','stanford_ner/' + 'stanford-ner-3.9.2.jar')
+#stanford_ner_tagger = StanfordNERTagger('stanford_ner/' + 'classifiers/english.muc.7class.distsim.crf.ser.gz','stanford_ner/' + 'stanford-ner-3.9.2.jar')
 
 #For Spelling 
 spell = SpellChecker()
@@ -455,31 +456,37 @@ def spacy_data(data1, lyrics):
     return data1
 
 #%%
+#BERT NER
+
+def ner_bert(data1, lyrics):
+   return bert.classifyWithBert(data1.iloc[0][lyrics], data1)    
+
+#%%
 #Stanford NER
-def ner_stanford(data1, lyrics): 
-
-    data1['Location'] = ''; 
-    data1['Date'] = '';
-    data1['Time'] = '';
-    
-    for i in range(0, len(data1)):
-        
-        song = data1.iloc[i][lyrics]
-        results = stanford_ner_tagger.tag(song.split())
-
-        for result in results:
-           
-            tag_value = result[0]
-            tag_type = result[1]
-            
-            if tag_type == 'LOCATION': 
-                data1['Location'].iloc[i] = data1['Location'].iloc[i]+' '+tag_value
-            elif tag_type == 'DATE': 
-                data1['Date'].iloc[i] = data1['Date'].iloc[i]+' '+tag_value
-            elif tag_type == 'TIME': 
-                data1['Time'].iloc[i] = data1['Time'].iloc[i]+' '+tag_value
-                
-    return data1    
+#def ner_stanford(data1, lyrics): 
+#
+#    data1['Location'] = ''; 
+#    data1['Date'] = '';
+#    data1['Time'] = '';
+#    
+#    for i in range(0, len(data1)):
+#        
+#        song = data1.iloc[i][lyrics]
+#        results = stanford_ner_tagger.tag(song.split())
+#
+#        for result in results:
+#           
+#            tag_value = result[0]
+#            tag_type = result[1]
+#            
+#            if tag_type == 'LOCATION': 
+#                data1['Location'].iloc[i] = data1['Location'].iloc[i]+' '+tag_value
+#            elif tag_type == 'DATE': 
+#                data1['Date'].iloc[i] = data1['Date'].iloc[i]+' '+tag_value
+#            elif tag_type == 'TIME': 
+#                data1['Time'].iloc[i] = data1['Time'].iloc[i]+' '+tag_value
+#                
+#    return data1    
 
 #%% 
 #FINAL FUNCTION    
@@ -495,7 +502,10 @@ def finale(text, min_char_to_run, cut_off):
     clean_text1['text'] = clean_text1['text'].apply(decontracted) 
     
     #Stanford NER (before lowercase) 
-    clean_text1 = ner_stanford(clean_text1, 'text')
+    #clean_text1 = ner_stanford(clean_text1, 'text')
+    
+    #Bert NER (before lowercase) 
+    clean_text1 = ner_bert(clean_text1, 'text')
     
     clean_text1 = clean_text(clean_text1, min_char_to_run, 'text')
     clean_text1['text'] = clean_text1['text'].str.lower()
